@@ -75,6 +75,14 @@ class ls_problem(basic_problem):
         self.ls_k = np.array([0, 1 - self.ls_k, self.ls_k, 1])
         return
 
+    def load_skip(self):
+        print("Loading skip.dat.")
+        file = self.res_dir + "skip.dat"
+        self.skip = np.loadtxt(file, dtype=bool)
+        self.n_var_s = self.n_var_o - np.sum(np.asarray(self.skip[:self.n_var_o], dtype=int))
+        print("Done. total number: %d." % (np.sum(self.skip)))
+        return
+
     def line_search_gss(self, x, direction, max_step, symm=False):
         print("Line search.")
         x_list = []

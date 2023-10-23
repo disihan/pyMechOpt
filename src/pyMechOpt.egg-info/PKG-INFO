@@ -1,3 +1,19 @@
+Metadata-Version: 2.1
+Name: pyMechOpt
+Version: 0.0.1
+Summary: A Python toolbox for optimizing chemical reaction mechanisms
+Author-email: Di Sihan <dsh@buaa.edu.cn>
+Project-URL: Homepage, https://github.com/disihan/pyMechOpt
+Project-URL: Bug Tracker, https://github.com/disihan/pyMechOpt/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pymoo>=0.6.0.0
+Requires-Dist: cantera>=3.0.0
+
 # pyMechOpt: A Python toolbox for optimizing chemical reaction mechanisms
 
 pyMechOpt can optimize the chemical reaction mechanism and reduce the difference with the detailed reaction mechanism.

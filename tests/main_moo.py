@@ -20,8 +20,8 @@ mech_detailed = 'mech/gri30.yaml'  # detailed mech
 mech_reduced = 'mech/gri30-r45.yaml'  # reduced mech
 
 opt_prob = mo_problem(mech_detailed, mech_reduced, temperature, ratio, pressure, spcs_int, spcs_peak)
-opt_prob.calc_skip(skip_num=50)
-# opt_prob.load_skip()
+# opt_prob.calc_skip(skip_num=50)
+opt_prob.load_skip()
 opt_prob.run(algorithm="MOEAD",
              max_gen=10,
              pop_size=200)

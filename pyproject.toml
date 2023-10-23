@@ -21,6 +21,6 @@ dependencies = [
     "cantera>=3.0.0",
 ]
 
-#[project.urls]
-#"Homepage" = "https://github.com/pypa/sampleproject"
-#"Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+[project.urls]
+"Homepage" = "https://github.com/disihan/pyMechOpt"
+"Bug Tracker" = "https://github.com/disihan/pyMechOpt/issues"
