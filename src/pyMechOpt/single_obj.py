@@ -1,6 +1,8 @@
 import numpy as np
 import cantera as ct
 import sys
+import os
+import time
 
 from pymoo.optimize import minimize
 from pymoo.algorithms.soo.nonconvex.ga import GA
@@ -29,16 +31,35 @@ class so_problem(basic_problem):
             ("iter: %d,    num:%d,    f:" + np.array2string(f, floatmode="fixed", precision=4)) % (self.gen, self.num))
         self.hist_f.append(f)
         if len(self.hist_f) == self.pop_size:
+            self.time_1 = time.process_time() - self.time_0
             self.gen = self.gen + 1
             np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_x.dat', self.hist_x)
             np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_f.dat', self.hist_f)
+            t_f_best_idx = np.argmin(self.hist_f)
+            t_f_best = self.hist_f[t_f_best_idx]
+            t_x_best = self.hist_x[t_f_best_idx]
+            with open(self.hist_dir + "hist_x.dat", "a") as t_f:
+                np.savetxt(t_f, t_x_best, newline=' ')
+                t_f.write("\n")
+            with open(self.hist_dir + "hist_f.dat", "a") as t_f:
+                np.savetxt(t_f, np.array([self.gen, t_f_best, self.time_1]), newline=' ')
+                t_f.write("\n")
             self.hist_f = []
             self.hist_x = []
             self.num = 0
         out["F"] = f
 
+    def out_init(self):
+        super().out_init()
+        if os.path.exists(self.hist_dir + "hist_x.dat") == True:
+            os.remove(self.hist_dir + "hist_x.dat")
+        if os.path.exists(self.hist_dir + "hist_f.dat") == True:
+            os.remove(self.hist_dir + "hist_f.dat")
+        return
+
     def run(self, algorithm="GA", seed=1, max_gen=400, pop_size=200, **kwargs):
         super().soo_init(**kwargs)
+        self.time_0 = time.process_time()
         if type(algorithm).__name__ == "str":
             if algorithm == "GA":
                 algorithm = GA(pop_size=pop_size)

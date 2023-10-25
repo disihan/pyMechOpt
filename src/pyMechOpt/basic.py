@@ -2,6 +2,7 @@ import numpy as np
 import cantera as ct
 import os
 import sys
+import time
 import matplotlib.pyplot as plt
 
 from pymoo.core.problem import ElementwiseProblem
