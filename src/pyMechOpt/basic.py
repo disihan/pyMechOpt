@@ -6,9 +6,6 @@ import time
 import matplotlib.pyplot as plt
 
 from pymoo.core.problem import ElementwiseProblem
-from pymoo.util.ref_dirs import get_reference_directions
-from pymoo.algorithms.moo.nsga3 import NSGA3
-from pymoo.optimize import minimize
 
 from pyMechOpt.sim import calc_all_orig, calc_all_rdct, spcs_name_idx, calc_y_int, calc_err_all_list
 from pyMechOpt.mod_rxns import get_factor_dim, rxns_yaml_arr_list
@@ -33,27 +30,20 @@ class basic_problem(ElementwiseProblem):
         self.temp_ini = temp_ini
         self.nn = len(temp_ini)
 
-        # self.delay_orig = calc_delay(gas_orig, ratio=ratio, temp_ini=temp_ini, pres_ini=pres)
-
         self.idx_int_orig = spcs_name_idx(gas_orig, spcs_int)
         self.idx_int_rdct = spcs_name_idx(gas_rdct, spcs_int)
         self.idx_peak_orig = spcs_name_idx(gas_orig, spcs_peak)
         self.idx_peak_rdct = spcs_name_idx(gas_rdct, spcs_peak)
-        # self.range_input = range_input
 
         self.n_var_o = get_factor_dim(gas_rdct)
         self.n_var_s = self.n_var_o
         self.skip = np.zeros(self.n_var_o, dtype=bool)
-        # if calc_orig:
         self.t_list_orig, \
             self.temp_list_orig, \
             self.y_list_int_orig, \
             self.y_list_peak_orig = calc_all_orig(gas_orig, ratio, temp_ini, pres, self.idx_int_orig,
                                                   self.idx_peak_orig)
         self.y_int_orig = calc_y_int(self.t_list_orig, self.y_list_int_orig)
-
-        # self.l = (-1) * np.ones(self.n_var_o) * range_input
-        # self.r = np.ones(self.n_var_o) * range_input
 
         self.hist_f = []
         self.hist_x = []
@@ -91,6 +81,11 @@ class basic_problem(ElementwiseProblem):
         err = err_int + err_peak
         return err
 
+    def save_f_orig_so(self):
+        f_orig = self.val_so(np.zeros(self.n_var_s))
+        np.savetxt(self.hist_dir + "f_orig.dat", [f_orig])
+        return f_orig
+
     def val_so(self, input):
         err = self.val_mo(input)
         err = np.linalg.norm(err)
@@ -99,7 +94,7 @@ class basic_problem(ElementwiseProblem):
     def calc_skip(self, skip_num=None):
         print("Calculating the number of variables that can be skipped.")
         input = np.zeros(self.n_var_o)
-        job = self.job_skip(input)
+        job = self.grad(input)
         self.skip[job == 0] = True
 
         nvar_zero = np.sum(self.skip)
@@ -111,7 +106,13 @@ class basic_problem(ElementwiseProblem):
             self.skip[order[:skip_num]] = True
         print("Done. total number: %d." % (np.sum(self.skip)))
         np.savetxt(self.res_dir + "skip.dat", self.skip, fmt="%d")
+        np.savetxt(self.res_dir + "order.dat", order, fmt="%d")
+        np.savetxt(self.res_dir + "sa.dat", job)
         self.n_var_s = self.n_var_o - np.sum(np.asarray(self.skip[:self.n_var_o], dtype=int))
+
+        return
+
+    def update_boundary(self):
         self.l_s = (-1) * np.ones(self.n_var_s) * self.range_input
         self.r_s = np.ones(self.n_var_s) * self.range_input
         return
@@ -125,10 +126,8 @@ class basic_problem(ElementwiseProblem):
         self.r_s = np.ones(self.n_var_s) * self.range_input
         print("Done. total number: %d." % (np.sum(self.skip)))
 
-    def job_skip(self, input, job_fac=1e-04):
+    def grad(self, input, grad_fac=1e-04):
         print("Calculating Jacobian matrix.")
-        # input_s = np.zeros(self.n_var_o)
-        # input_s[~self.skip] = input
         res = np.zeros(self.n_var_s)
 
         for k in range(self.n_var_s):
@@ -136,17 +135,11 @@ class basic_problem(ElementwiseProblem):
             t_fac_2 = np.zeros_like(input)
             t_fac_1[:] = input[:]
             t_fac_2[:] = input[:]
-            t_fac_1[k] = t_fac_1[k] + job_fac
-            t_fac_2[k] = t_fac_2[k] - job_fac
+            t_fac_1[k] = t_fac_1[k] + grad_fac
+            t_fac_2[k] = t_fac_2[k] - grad_fac
             t_j = self.val_so(t_fac_1) - self.val_so(t_fac_2)
-            res[k] = t_j / job_fac
-            # print("No.%d: %.6e" % (k, res[k]))
+            res[k] = t_j / grad_fac
         return res
-
-    # def val_skip(self, input):
-    #     input_s = np.zeros(self.n_var_o)
-    #     input_s[~self.skip] = input
-    #     return self.val_mo(input_s)
 
     def out_init(self):
         if os.path.exists(self.hist_dir) == False:
@@ -174,6 +167,21 @@ class basic_problem(ElementwiseProblem):
                          xu=self.r_s,
                          **kwargs)
         return
+
+    @staticmethod
+    def plot_hist(hist_f, time=None, xaxis_time=False, marker="r--*", **kwargs):
+        fig = plt.figure(kwargs)
+        lns = []
+        if xaxis_time:
+            lns += plt.plot(time, hist_f, marker, kwargs)
+            plt.xlabel("Execution Time")
+        else:
+            lns += plt.plot(np.arange(1, len(hist_f) + 1), hist_f, marker, kwargs)
+            plt.xlabel("Generation")
+        plt.ylabel("$F$")
+        plt.grid()
+        fig.tight_layout()
+        return fig, lns
 
 
 def write_yaml(gas, filename):

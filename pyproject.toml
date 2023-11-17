@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyMechOpt"
-version = "0.2"
+version = "0.3"
 authors = [
   { name="Di Sihan", email="dsh@buaa.edu.cn" },
 ]
