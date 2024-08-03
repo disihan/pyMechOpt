@@ -17,12 +17,26 @@ class ls_problem(basic_problem):
     The available algorithms are GD, CG, CD and mini-batch SGD.
     """
 
-    def __init__(self, gas_orig, gas_rdct, temp_ini, ratio, pres, spcs_int, spcs_peak,
-                 max_step=0.05, eps=1e-08, step_ratio=10, **kwargs):
+    def __init__(
+        self,
+        gas_orig,
+        gas_rdct,
+        temp_ini,
+        ratio,
+        pres,
+        spcs_int,
+        spcs_peak,
+        max_step=0.05,
+        eps=1e-08,
+        step_ratio=10,
+        **kwargs,
+    ):
         self.max_step = max_step
         self.eps = eps
         self.step_ratio = step_ratio
-        super().__init__(gas_orig, gas_rdct, temp_ini, ratio, pres, spcs_int, spcs_peak, **kwargs)
+        super().__init__(
+            gas_orig, gas_rdct, temp_ini, ratio, pres, spcs_int, spcs_peak, **kwargs
+        )
 
     def run(self, algorithm="GD", max_gen=400, max_step=0.05, **kwargs):
         self.out_init()
@@ -91,16 +105,19 @@ class ls_problem(basic_problem):
             self.time_1 = time.process_time() - self.time_0
             self.iter += 1
             with open(self.hist_dir + "hist_x.dat", "a") as t_f:
-                np.savetxt(t_f, self.x, newline=' ')
+                np.savetxt(t_f, self.x, newline=" ")
                 t_f.write("\n")
             with open(self.hist_dir + "hist.dat", "a") as t_f:
-                np.savetxt(t_f, np.array([self.f, self.time_1]), newline=' ')
+                np.savetxt(t_f, np.array([self.f, self.time_1]), newline=" ")
                 t_f.write("\n")
 
-            print(algorithm + " step: %d, F=%.6f, time=%f" % (self.iter, self.f, self.time_1))
+            print(
+                algorithm
+                + " step: %d, F=%.6f, time=%f" % (self.iter, self.f, self.time_1)
+            )
 
         with open(self.res_dir + "res_x.dat", "a") as t_f:
-            np.savetxt(t_f, self.x_best, newline=' ')
+            np.savetxt(t_f, self.x_best, newline=" ")
             t_f.write("\n")
         with open(self.res_dir + "res_f.dat", "a") as t_f:
             np.savetxt(t_f, np.array([self.f_best]))
@@ -126,7 +143,9 @@ class ls_problem(basic_problem):
         print("Loading skip.dat.")
         file = self.res_dir + "skip.dat"
         self.skip = np.loadtxt(file, dtype=bool)
-        self.n_var_s = self.n_var_o - np.sum(np.asarray(self.skip[:self.n_var_o], dtype=int))
+        self.n_var_s = self.n_var_o - np.sum(
+            np.asarray(self.skip[: self.n_var_o], dtype=int)
+        )
         print("Done. total number: %d." % (np.sum(self.skip)))
         return
 
@@ -144,8 +163,11 @@ class ls_problem(basic_problem):
             x_list.append(x + x_step[k] * direction)
         ls_iter = 0
         f_list = np.zeros(4)
+
         for k in range(len(x_list)):
-            f_list[k] = (self.val_so(x_list[k]))
+            f_list[k] = self.val_so(x_list[k])
+        if r - l <= self.eps:
+            return x, self.val_so(x), 0
         while r - l > self.eps and ls_iter < max_ls_step:
             ls_iter += 1
             if f_list[2] > f_list[1]:
@@ -168,10 +190,14 @@ class ls_problem(basic_problem):
             f_b = f_list[t_idx]
             x_b = x_list[t_idx]
             step = x_step[t_idx]
-            print("\titer: %d    x:%.6e    f:%.6e    idx:%d" % (ls_iter, step, f_b, t_idx))
+            print(
+                "\titer: %d    x:%.6e    f:%.6e    idx:%d" % (ls_iter, step, f_b, t_idx)
+            )
         return x_b, f_b, step
 
-    def line_search_spline(self, x, direction, max_step, symm, n_init, n_p, max_ls_step):
+    def line_search_spline(
+        self, x, direction, max_step, symm, n_init, n_p, max_ls_step
+    ):
         print("Line search: spline.")
         x_list = []
         direction = direction / np.max(np.abs(direction))
@@ -192,20 +218,26 @@ class ls_problem(basic_problem):
             f_list.append(self.val_so(x_list[k]))
         while ls_iter < max_ls_step:
             ls_iter += 1
-            t_func = interp1d(x_step, f_list, kind='cubic')
+            t_func = interp1d(x_step, f_list, kind="cubic")
             f_r = t_func(x_step_r)
             t_f_min_idx = np.argmin(f_r)
             t_f_min = f_r[t_f_min_idx]
             t_f_max = np.max(f_r)
             t_x_step_min = x_step_r[t_f_min_idx]
             t_x_min = x + t_x_step_min * direction
-            if (t_x_step_min in x_step) or ((t_f_max - t_f_min) / (np.abs(t_f_max)) < self.eps):
+            if (t_x_step_min in x_step) or (
+                (t_f_max - t_f_min) / (np.abs(t_f_max)) < self.eps
+            ):
                 return t_x_min, t_f_min, t_x_step_min
             x_step.append(t_x_step_min)
             f_list.append(self.val_so(t_x_min))
-            print("\titer: %d    x:%.6e    f:%.6e    idx:%d" % (ls_iter, t_x_step_min, f_list[-1], t_f_min_idx))
+            print(
+                "\titer: %d    x:%.6e    f:%.6e    idx:%d"
+                % (ls_iter, t_x_step_min, f_list[-1], t_f_min_idx)
+            )
             if np.abs(x_step[-1] - x_step[-2]) < self.eps:
                 return t_x_min, f_list[-1], x_step[-1]
+        return t_x_min, t_f_min, t_x_step_min
 
     def linesearch(self, x, direction, max_step, symm=False, **kwargs):
         ls_method = kwargs.get("ls_method", "GSS")
@@ -215,16 +247,21 @@ class ls_problem(basic_problem):
         elif ls_method == "spline":
             n_init = kwargs.get("n_init", 5)
             n_p = kwargs.get("n_p", 100001)
-            return self.line_search_spline(x, direction, max_step, symm, n_init, n_p, max_lsstep)
+            return self.line_search_spline(
+                x, direction, max_step, symm, n_init, n_p, max_lsstep
+            )
         else:
             sys.stderr.write("Unsupported line search method: " + str(ls_method))
             exit()
 
     def gd_iter(self, max_step, **kwargs):
-        self.direction = self.grad(self.x)
-        self.x, self.f, self.step = self.linesearch(self.x, -self.direction,
-                                                    min(self.step * self.step_ratio, self.max_step),
-                                                    **kwargs)
+        self.direction = self.grad(self.x, log=True)
+        self.x, self.f, self.step = self.linesearch(
+            self.x,
+            -self.direction,
+            min(self.step * self.step_ratio, self.max_step),
+            **kwargs,
+        )
         return
 
     def cg_iter(self, max_step, **kwargs):
@@ -232,8 +269,14 @@ class ls_problem(basic_problem):
         if self.direction is None:
             p = g
         else:
-            p = ((g - self.direction).transpose() * g / (self.direction.transpose() * self.direction))[0, 0]
-        self.x, self.f, t_step = self.linesearch(self.x, -p, min(self.step * self.step_ratio, self.max_step), **kwargs)
+            p = (
+                (g - self.direction).transpose()
+                * g
+                / (self.direction.transpose() * self.direction)
+            )[0, 0]
+        self.x, self.f, t_step = self.linesearch(
+            self.x, -p, min(self.step * self.step_ratio, self.max_step), **kwargs
+        )
         return
 
     def grad_batch(self, input, batch, grad_fac=1e-04):
@@ -255,9 +298,12 @@ class ls_problem(basic_problem):
         n_batch = kwargs.get("n_batch")
         self.batch = self.random_batch(self.n_var_s, n_batch)
         self.direction = self.grad_batch(self.x, self.batch)
-        self.x, self.f, t_step = self.linesearch(self.x, -self.direction,
-                                                 min(self.step * self.step_ratio, self.max_step),
-                                                 **kwargs)
+        self.x, self.f, t_step = self.linesearch(
+            self.x,
+            -self.direction,
+            min(self.step * self.step_ratio, self.max_step),
+            **kwargs,
+        )
         return
 
     @staticmethod
@@ -270,9 +316,13 @@ class ls_problem(basic_problem):
         self.direction = np.zeros(self.n_var_s)
         t_n = self.iter % self.n_var_s
         self.direction[self.order[t_n]] = 1
-        self.x, self.f, self.step_cd[t_n] = self.linesearch(self.x, self.direction,
-                                                            min(self.step_cd[t_n] * self.step_ratio, max_step),
-                                                            symm=True, **kwargs)
+        self.x, self.f, self.step_cd[t_n] = self.linesearch(
+            self.x,
+            self.direction,
+            min(self.step_cd[t_n] * self.step_ratio, max_step),
+            symm=True,
+            **kwargs,
+        )
         self.step_cd[t_n] = np.abs(self.step_cd[t_n])
         return
 
@@ -282,9 +332,13 @@ class ls_problem(basic_problem):
         if t_n == 0:
             self.batch = self.random_batch(self.n_var_s, self.n_var_s)
         self.direction[self.batch[t_n]] = 1
-        self.x, self.f, self.step_cd[t_n] = self.linesearch(self.x, self.direction,
-                                                            min(self.step_cd[t_n] * self.step_ratio, max_step),
-                                                            symm=True, **kwargs)
+        self.x, self.f, self.step_cd[t_n] = self.linesearch(
+            self.x,
+            self.direction,
+            min(self.step_cd[t_n] * self.step_ratio, max_step),
+            symm=True,
+            **kwargs,
+        )
         self.step_cd[t_n] = np.abs(self.step_cd[t_n])
 
     @staticmethod

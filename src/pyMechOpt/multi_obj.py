@@ -11,6 +11,7 @@ from pymoo.algorithms.moo.unsga3 import UNSGA3
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.algorithms.moo.moead import MOEAD
 from pymoo.algorithms.moo.ctaea import CTAEA
+
 # from pymoo.algorithms.moo.age import AGEMOEA
 from pymoo.optimize import minimize
 
@@ -24,10 +25,30 @@ class mo_problem(basic_problem):
     The available algorithms are NSGA2, NSGA3, or other Pymoo provided algorithms.
     """
 
-    def __init__(self, gas_orig, gas_rdct, temp_ini=np.array([800]), ratio=np.array([1]), pres=np.array([101325]),
-                 spcs_int=["H2"], spcs_peak=["OH"], range_input=0.2, *args, **kwargs):
-        super().__init__(gas_orig, gas_rdct, temp_ini=temp_ini, ratio=ratio, pres=pres,
-                         spcs_int=spcs_int, spcs_peak=spcs_peak, *args, **kwargs)
+    def __init__(
+        self,
+        gas_orig,
+        gas_rdct,
+        temp_ini=np.array([800]),
+        ratio=np.array([1]),
+        pres=np.array([101325]),
+        spcs_int=["H2"],
+        spcs_peak=["OH"],
+        range_input=0.2,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            gas_orig,
+            gas_rdct,
+            temp_ini=temp_ini,
+            ratio=ratio,
+            pres=pres,
+            spcs_int=spcs_int,
+            spcs_peak=spcs_peak,
+            *args,
+            **kwargs,
+        )
         self.range_input = range_input
         self.l_s = (-1) * np.ones(self.n_var_o) * range_input
         self.r_s = np.ones(self.n_var_o) * range_input
@@ -44,17 +65,22 @@ class mo_problem(basic_problem):
         f = self.val_mo(x)
         self.num += 1
         print(
-            ("iter: %d,    num:%d,    f:" + np.array2string(f, floatmode="fixed", precision=4)) % (self.gen, self.num))
+            (
+                "iter: %d,    num:%d,    f:"
+                + np.array2string(f, floatmode="fixed", precision=4)
+            )
+            % (self.gen, self.num)
+        )
         self.hist_f.append(f)
         if len(self.hist_f) == self.pop_size:
             self.time_1 = time.process_time() - self.time_0
             self.gen = self.gen + 1
-            np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_x.dat', self.hist_x)
-            np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_f.dat', self.hist_f)
+            np.savetxt(self.hist_dir + "gen_" + str(self.gen) + "_x.dat", self.hist_x)
+            np.savetxt(self.hist_dir + "gen_" + str(self.gen) + "_f.dat", self.hist_f)
             self.hist_f = []
             self.hist_x = []
             with open(self.hist_dir + "time.dat", "a") as t_f:
-                np.savetxt(t_f, np.array([self.gen, self.time_1]), newline=' ')
+                np.savetxt(t_f, np.array([self.gen, self.time_1]), newline=" ")
                 t_f.write("\n")
             self.num = 0
         out["F"] = f
@@ -64,13 +90,20 @@ class mo_problem(basic_problem):
         self.update_boundary()
         self.time_0 = time.process_time()
         if type(algorithm).__name__ == "str":
-            if algorithm == "NSGA3" or algorithm == "MOEAD" or algorithm == "CTAEA" or "UNSGA3":
+            if (
+                algorithm == "NSGA3"
+                or algorithm == "MOEAD"
+                or algorithm == "CTAEA"
+                or "UNSGA3"
+            ):
                 print("Calculating reference directions for " + algorithm + ".")
                 ref_dirs = get_reference_directions("energy", self.nn, pop_size, seed=1)
                 np.savetxt(self.res_dir + "ref_dirs.dat", ref_dirs)
                 print("Done. ")
                 if algorithm == "NSGA3":
-                    algorithm = NSGA3(pop_size=len(ref_dirs), ref_dirs=ref_dirs, **kwargs)
+                    algorithm = NSGA3(
+                        pop_size=len(ref_dirs), ref_dirs=ref_dirs, **kwargs
+                    )
                 elif algorithm == "MOEAD":
                     algorithm = MOEAD(ref_dirs=ref_dirs, **kwargs)
                 elif algorithm == "CTAEA":
@@ -84,11 +117,18 @@ class mo_problem(basic_problem):
                 exit()
 
         self.pop_size = algorithm.pop_size
-        f_orig = self.val_mo(np.zeros(self.n_var_s))
+        t_err_int, t_err_peak, t_err_temp_int, t_err_temp_peak = self.val_mo_err(
+            np.zeros(self.n_var_s)
+        )
+        f_orig = self.err2mo(t_err_int, t_err_peak, t_err_temp_int, t_err_temp_peak)
         np.savetxt(self.hist_dir + "f_orig.dat", f_orig)
+        t_k = 0
+        for err_orig in [t_err_int, t_err_peak, t_err_temp_int, t_err_temp_peak]:
+            t_k += 1
+            np.savetxt(self.hist_dir + "err_orig" + str(t_k) + ".dat", err_orig)
         print("Pop size: %d" % (self.pop_size))
         print("START OPTIMIZATION.")
-        res = minimize(self, algorithm, termination=('n_gen', max_gen), **kwargs)
+        res = minimize(self, algorithm, termination=("n_gen", max_gen), **kwargs)
         print("DONE OPTIMIZATION")
         print("The total number of solutions in the Pareto front: %d" % len(res.F))
         np.savetxt(self.res_dir + "res_X.dat", res.X)
@@ -106,7 +146,7 @@ class mo_problem(basic_problem):
         k = 1
         hist_f = []
         while True:
-            t_fname = 'gen_' + str(k) + '_f.dat'
+            t_fname = "gen_" + str(k) + "_f.dat"
             t_fname = hist_dir + t_fname
             if os.path.exists(t_fname) == True:
                 print("Loading history data: " + t_fname)
@@ -127,14 +167,15 @@ class mo_problem(basic_problem):
         return res_f
 
     @staticmethod
-    def plot_hist(hist_f, errorbar=False):
+    def plot_hist(hist_f, errorbar=False, **kwargs):
         fig = plt.figure()
         f_min = []
         f_max = []
         f_mean = []
         f_err = []
-        color = ['r', 'g', 'y', 'b', 'c', 'k', 'm']
-        marker = ['o', 'v', '*', 'x', 's', 'd']
+        color = ["r", "g", "y", "b", "c", "k", "m"]
+        marker = ["o", "v", "*", "x", "s", "d"]
+        ms = kwargs.get("markersize", 10)
         for k in range(len(hist_f)):
             t_f = hist_f[k]
             f_min.append(np.min(t_f, axis=0))
@@ -151,22 +192,37 @@ class mo_problem(basic_problem):
         if n_obj > len(color) * len(marker):
             sys.stderr.write("Warning: n_obj>" + str(len(color) * len(marker)))
         lns = []
+        ln_style = "--"
+        if len(f_mean) > 50:
+            marker = [""] * len(marker)
+            ln_style = "-"
         if errorbar:
             for k in range(n_obj):
-                style_str = "--" + marker[k % len(marker)] + color[k % len(color)]
-                lns += plt.errorbar(np.arange(1, len(hist_f) + 1), f_mean[:, k], err=f_err, fmt=style_str,
-                                    label=r'${OBJ}_{' + str(k + 1) + '}$')
+                style_str = ln_style + marker[k % len(marker)] + color[k % len(color)]
+                lns += plt.errorbar(
+                    np.arange(1, len(hist_f) + 1),
+                    f_mean[:, k],
+                    err=f_err,
+                    fmt=style_str,
+                    label=r"$\rm{OBJ\ " + str(k + 1) + "}$",
+                    markersize=ms,
+                )
         else:
             for k in range(n_obj):
-                style_str = "--" + marker[k % len(marker)] + color[k % len(color)]
-                lns += plt.errorbar(np.arange(1, len(hist_f) + 1), f_mean[:, k], fmt=style_str,
-                                    label=r'${OBJ}_{' + str(k + 1) + '}$')
+                style_str = ln_style + marker[k % len(marker)] + color[k % len(color)]
+                lns += plt.errorbar(
+                    np.arange(1, len(hist_f) + 1),
+                    f_mean[:, k],
+                    fmt=style_str,
+                    label=r"$\rm{OBJ " + str(k + 1) + "}$",
+                    markersize=ms,
+                )
 
         plt.xlabel("$\mathrm{Interation}$")
         plt.ylabel("$\overline{F}$")
         plt.yscale("log")
         if n_obj < 7:
-            plt.legend()
+            plt.legend(loc="upper right")
         plt.grid()
         plt.tight_layout()
         return fig, lns
@@ -187,8 +243,10 @@ class mo_problem(basic_problem):
 
         lns = []
 
-        plt.fill_between(np.arange(1, len(hist_f) + 1), f_min, f_max, alpha=0.3, facecolor='gray')
-        lns += plt.plot(np.arange(1, len(hist_f) + 1), f_mean, 'r--*')
+        plt.fill_between(
+            np.arange(1, len(hist_f) + 1), f_min, f_max, alpha=0.3, facecolor="gray"
+        )
+        lns += plt.plot(np.arange(1, len(hist_f) + 1), f_mean, "r--*")
         plt.yscale("log")
         plt.grid()
         plt.ylabel("${F_{\mathrm{GEOM}}}$")
@@ -198,31 +256,45 @@ class mo_problem(basic_problem):
         return fig, lns, f_geom, f_mean, f_min, f_max
 
     @staticmethod
-    def plot_hist_rms(hist_f):
-        f_rms = []
+    def plot_hist_norm(hist_f):
+        f_geom = []
         f_mean = []
         f_min = []
+        idx_min = []
         f_max = []
         fig = plt.figure()
         for k in range(len(hist_f)):
-            t_f_rms = np.linalg.norm(hist_f[k], axis=1)
-            f_rms.append(t_f_rms)
-            f_mean.append(np.mean(t_f_rms))
-            f_min.append(np.min(t_f_rms))
-            f_max.append(np.max(t_f_rms))
+            t_f_geom = np.linalg.norm(hist_f[k], axis=1)
+            f_geom.append(t_f_geom)
+            f_mean.append(np.mean(t_f_geom))
+            t_idx_min = np.argmin(t_f_geom)
+            idx_min.append(t_idx_min)
+            f_min.append(t_f_geom[t_idx_min])
+            f_max.append(np.max(t_f_geom))
 
         lns = []
 
-        plt.fill_between(np.arange(1, len(hist_f) + 1), f_min, f_max, alpha=0.3, facecolor='gray')
-        lns += plt.plot(np.arange(1, len(hist_f) + 1), f_mean, 'r--*')
+        plt.fill_between(
+            np.arange(1, len(hist_f) + 1), f_min, f_max, alpha=0.3, facecolor="gray"
+        )
+        lns += plt.plot(np.arange(1, len(hist_f) + 1), f_mean, "r--*")
         plt.yscale("log")
         plt.grid()
-        plt.ylabel(r"${F_{\mathrm{RMS}}}$")
+        plt.ylabel("${F_{\mathrm{GEOM}}}$")
         plt.xlabel("$\mathrm{Interation}$")
-        plt.xlabel()
         plt.tight_layout()
 
-        return fig, lns, f_rms, f_mean, f_min, f_max
+        return fig, lns, f_geom, f_mean, f_min, f_max, idx_min
+
+    @staticmethod
+    def pareto_normalization(res_f):
+        F_imin_1 = np.expand_dims(np.min(res_f, axis=0), 0)
+        F_imax_1 = np.expand_dims(np.max(res_f, axis=0), 0)
+        F_imin = F_imin_1.repeat(res_f.shape[0], axis=0)
+        F_imax = F_imax_1.repeat(res_f.shape[0], axis=0)
+        F_o = (res_f - F_imin) / (F_imax - F_imin)
+        F_o_norm = np.linalg.norm(F_o, ord=2, axis=1)
+        return F_o, F_o_norm
 
     @staticmethod
     def plot_parallel_coordinates(res_f, orig_f, highlight=False, **kwargs):
@@ -239,23 +311,33 @@ class mo_problem(basic_problem):
         # F_orig = np.loadtxt("./hist/f_orig.dat")
         F_orig = np.expand_dims(orig_f, 0).repeat(res_f.shape[0], axis=0)
         opt_ratio = res_f / F_orig
-        color = ['r', 'g', 'y', 'b', 'c', 'k', 'm']
+        color = ["r", "g", "y", "b", "c", "k", "m"]
         opt_ratio_mean = np.mean(opt_ratio, axis=0)
-        t_c = 'lightgrey'
+        t_c = "lightgrey"
         lns_1 = []
         lns_2 = []
         for k in range(opt_ratio.shape[0]):
             if highlight:
                 if (opt_ratio[k, :] < opt_ratio_mean).all():
-                    t_c = 'lightgrey'
+                    t_c = "lightgrey"
                 else:
-                    t_c = 'lightgrey'
+                    t_c = "lightgrey"
             plt.figure(num_1)
-            lns_1 += plt.plot(np.linspace(1, n_obj, n_obj), opt_ratio[k, :], 'x--', color=t_c,
-                              markeredgecolor=color[k % (len(color))])
+            lns_1 += plt.plot(
+                np.linspace(1, n_obj, n_obj),
+                res_f[k, :],
+                "x--",
+                color=t_c,
+                markeredgecolor=color[k % (len(color))],
+            )
             plt.figure(num_2)
-            lns_2 += plt.plot(np.linspace(1, n_obj, n_obj), F_o[k, :], 'x--', color=t_c,
-                              markeredgecolor=color[k % (len(color))])
+            lns_2 += plt.plot(
+                np.linspace(1, n_obj, n_obj),
+                F_o[k, :],
+                "x--",
+                color=t_c,
+                markeredgecolor=color[k % (len(color))],
+            )
         sct_x = []
         for k in range(n_obj):
             # sct_x.append("OBJ " + str(k + 1))
@@ -264,7 +346,7 @@ class mo_problem(basic_problem):
         plt.grid()
         plt.xticks(np.linspace(1, n_obj, n_obj), labels=sct_x)
         plt.yscale("log")
-        plt.ylabel(r"${F_{\mathrm{parato}}}/{F_0}$")
+        plt.ylabel(r"${F_{\mathrm{parato}}}$")
         plt.xlabel(r"$\rm{OBJ}$")
         plt.tight_layout()
 
@@ -275,3 +357,8 @@ class mo_problem(basic_problem):
         plt.tight_layout()
 
         return fig_1, fig_2, lns_1, lns_2
+
+    def single_parallel_coordinates(
+        self,
+    ):
+        return self.val_mo(np.zeros(self.n_var_s))

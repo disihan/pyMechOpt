@@ -1,0 +1,24 @@
+digraph "packages" {
+rankdir=BT
+charset="utf-8"
+"pyMechOpt" [color="black", label=<pyMechOpt>, shape="box", style="solid"];
+"pyMechOpt.basic" [color="black", label=<pyMechOpt.basic>, shape="box", style="solid"];
+"pyMechOpt.calc" [color="black", label=<pyMechOpt.calc>, shape="box", style="solid"];
+"pyMechOpt.line_search" [color="black", label=<pyMechOpt.line_search>, shape="box", style="solid"];
+"pyMechOpt.mod_rxns" [color="black", label=<pyMechOpt.mod_rxns>, shape="box", style="solid"];
+"pyMechOpt.multi_obj" [color="black", label=<pyMechOpt.multi_obj>, shape="box", style="solid"];
+"pyMechOpt.sim" [color="black", label=<pyMechOpt.sim>, shape="box", style="solid"];
+"pyMechOpt.single_obj" [color="black", label=<pyMechOpt.single_obj>, shape="box", style="solid"];
+"pyMechOpt.basic" -> "pyMechOpt" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.basic" -> "pyMechOpt.mod_rxns" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.basic" -> "pyMechOpt.sim" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.line_search" -> "pyMechOpt" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.line_search" -> "pyMechOpt.basic" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.multi_obj" -> "pyMechOpt" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.multi_obj" -> "pyMechOpt.basic" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.sim" -> "pyMechOpt" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.sim" -> "pyMechOpt.calc" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.sim" -> "pyMechOpt.mod_rxns" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.single_obj" -> "pyMechOpt" [arrowhead="open", arrowtail="none"];
+"pyMechOpt.single_obj" -> "pyMechOpt.basic" [arrowhead="open", arrowtail="none"];
+}

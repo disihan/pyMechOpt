@@ -2,6 +2,7 @@ import cantera as ct
 import numpy as np
 import warnings
 
+
 def get_factor_dim(t_gas):
     species = t_gas.species()
     reactions = t_gas.reactions()
@@ -58,6 +59,10 @@ def rxns_yaml_arr_list(t_gas, factor):
         str_equ = t_rxn.equation
         # type_rxns = gas.reaction_type(k)
         type_rxns = t_rxn.reaction_type
+        t_dup = t_rxn.duplicate
+        str_dup = ""
+        if t_dup:
+            str_dup = ",\nduplicate: true"
         if type_rxns == "Arrhenius":
             rate_a = t_rxn.rate.pre_exponential_factor * factor[p]
             p = p + 1
@@ -67,7 +72,7 @@ def rxns_yaml_arr_list(t_gas, factor):
             p = p + 1
             str_rate = '{A: ' + str(rate_a) + ', b: ' + str(rate_b) + ', Ea: ' + str(rate_e) + '}'
             str_cti = '{equation: ' + str_equ + ',\n' + \
-                      'rate-constant: ' + str_rate + '}'
+                      'rate-constant: ' + str_rate + str_dup + '}'
         elif type_rxns == "three-body-Arrhenius":
             str_eff = str(t_rxn.efficiencies)
             str_eff = str_eff.replace('\'', '')
@@ -81,7 +86,7 @@ def rxns_yaml_arr_list(t_gas, factor):
             str_cti = '{equation: ' + str_equ + ',\n' + \
                       'type: three-body,\n' + \
                       'rate-constant: ' + str_rate + ',\n' + \
-                      'efficiencies: ' + str_eff + '}'
+                      'efficiencies: ' + str_eff + str_dup + '}'
             # print(idx)
             # print(str_cti)
             # return ct.Reaction.fromCti(str_cti)
@@ -115,7 +120,7 @@ def rxns_yaml_arr_list(t_gas, factor):
                           ', T3: ' + str(array_para_falloff[1]) + \
                           ', T1: ' + str(array_para_falloff[2]) + \
                           ', T2: ' + str(array_para_falloff[3]) + '},\n'
-            str_cti = str_cti + 'efficiencies: ' + str_eff + '}'
+            str_cti = str_cti + 'efficiencies: ' + str_eff + str_dup + '}'
             # print(str_cti)
         tt_rxn = ct.Reaction.from_yaml(str_cti, gas)
         rxns_modd.append(tt_rxn)
