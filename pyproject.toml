@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyMechOpt"
-version = "0.3"
+version = "0.4"
 authors = [
   { name="Di Sihan", email="dsh@buaa.edu.cn" },
 ]
@@ -19,6 +19,7 @@ classifiers = [
 dependencies = [
     "pymoo>=0.6.0.0",
     "cantera>=3.0.0",
+    "pyDecision>=4.5.8"
 ]
 
 [project.urls]

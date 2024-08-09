@@ -3,6 +3,7 @@ import time
 import cantera as ct
 import sys
 import os
+import warnings
 import matplotlib.pyplot as plt
 
 from pymoo.util.ref_dirs import get_reference_directions
@@ -16,7 +17,7 @@ from pymoo.algorithms.moo.ctaea import CTAEA
 from pymoo.optimize import minimize
 
 from pyMechOpt.basic import basic_problem
-from pyMechOpt.basic import write_yaml
+from pyMechOpt.basic import write_yaml, x2yaml
 
 
 class mo_problem(basic_problem):
@@ -140,6 +141,84 @@ class mo_problem(basic_problem):
             t_gas_modd = self.input2gas(t_X)
             write_yaml(t_gas_modd, self.res_dir + t_fname)
         return res
+
+    @staticmethod
+    def gen_best(name, name_cap, mo_dir="../moo/", mech_dir="../mech/"):
+        res_dir = mo_dir + "./res_" + name + "/"
+        hist_dir = mo_dir + "./hist_" + name + "/"
+        res_f, orig_f = mo_problem.load_res(
+            res_dir=res_dir, hist_dir=hist_dir, load_orig=True
+        )
+        res_x = np.loadtxt(res_dir + "res_X.dat")
+        t_f_normalization, t_f_norm = mo_problem.pareto_norm(res_f)
+        t_idx_min = np.argmin(t_f_norm)
+        idx_min = t_idx_min
+        f_min = t_f_norm[t_idx_min]
+        x_min = res_x[t_idx_min, :]
+
+        gas_orig = ct.Solution(mech_dir + "gri30-r45.yaml")
+        skip = np.loadtxt(res_dir + "skip.dat", dtype=bool)
+        x2yaml(gas_orig, x_min, mech_dir + "mech.opt." + name + ".yaml", skip=skip)
+
+        return
+
+    @staticmethod
+    def gen_ranking(res_dir, method, weights=None):
+        res_f = mo_problem.load_res(res_dir=res_dir)
+        n_obj = res_f.shape[1]
+        res_x = np.loadtxt(res_dir + "res_X.dat")
+        if weights is None:
+            weights = np.ones(n_obj) * 1.0 / n_obj
+
+        if method == "euclidean":
+            _f_normalization, _f_so = mo_problem.pareto_norm(res_f)
+
+        elif method == "sum":
+            _f_normalization = mo_problem.pareto_normalization(res_f)
+            _f_so = np.sum(_f_normalization, axis=1)
+
+        elif method == "critic":
+            _f_normalization = mo_problem.pareto_normalization(res_f)
+            _fn_mean = np.mean(_f_normalization, axis=0)
+            _s_fn = np.std(_f_normalization, ddof=1, axis=0)
+            _r_fn = np.corrcoef(_f_normalization.transpose())
+            _rr_fn = np.sum(1 - _r_fn, axis=0)
+            _c = _s_fn * _rr_fn
+            _sum_c = np.sum(_c)
+            wt = _c / _sum_c
+            _f_so = np.einsum("j,ij->i", wt, _f_normalization)
+
+        elif method == "topsis":
+            from pyDecision.algorithm import topsis_method
+
+            _f_normalization = mo_problem.pareto_normalization(res_f)
+            criterion_type = ["min"] * n_obj
+            _f_so = topsis_method(
+                _f_normalization,
+                weights,
+                criterion_type,
+                graph=False,
+                verbose=False,
+            )
+            _f_so = 1 - _f_so
+
+        # elif method == "entropy":
+        #     from pyDecision.algorithm import entropy_method
+
+        #     _f_normalization = mo_problem.pareto_normalization(res_f)
+        #     criterion_type = ["min"] * n_obj
+        #     wt = entropy_method(_f_normalization, criterion_type)
+
+        #     _f_so = np.einsum("j,ij->i", wt, _f_normalization)
+
+        else:
+            warnings.warn("Unsupported method  " + method + ".")
+            exit()
+        rk = np.argsort(_f_so)
+        return (
+            _f_so,
+            rk,
+        )
 
     @staticmethod
     def load_hist(hist_dir="./hist/"):
@@ -287,7 +366,7 @@ class mo_problem(basic_problem):
         return fig, lns, f_geom, f_mean, f_min, f_max, idx_min
 
     @staticmethod
-    def pareto_normalization(res_f):
+    def pareto_norm(res_f):
         F_imin_1 = np.expand_dims(np.min(res_f, axis=0), 0)
         F_imax_1 = np.expand_dims(np.max(res_f, axis=0), 0)
         F_imin = F_imin_1.repeat(res_f.shape[0], axis=0)
@@ -295,6 +374,15 @@ class mo_problem(basic_problem):
         F_o = (res_f - F_imin) / (F_imax - F_imin)
         F_o_norm = np.linalg.norm(F_o, ord=2, axis=1)
         return F_o, F_o_norm
+
+    @staticmethod
+    def pareto_normalization(res_f):
+        F_imin_1 = np.expand_dims(np.min(res_f, axis=0), 0)
+        F_imax_1 = np.expand_dims(np.max(res_f, axis=0), 0)
+        F_imin = F_imin_1.repeat(res_f.shape[0], axis=0)
+        F_imax = F_imax_1.repeat(res_f.shape[0], axis=0)
+        F_o = (res_f - F_imin) / (F_imax - F_imin)
+        return F_o
 
     @staticmethod
     def plot_parallel_coordinates(res_f, orig_f, highlight=False, **kwargs):

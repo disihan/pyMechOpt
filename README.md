@@ -6,10 +6,11 @@ pyMechOpt can optimize the chemical reaction mechanism and reduce the difference
 
 It is recommended to install pyMechOpt in a newly created python environment.
 
-| Package                         | version  |
-| ------------------------------- | -------- |
-| [Cantera](https://cantera.org/) | \>=3.00  |
-| [Pymoo](https://pymoo.org/)     | \>=0.6.0 |
+| Package                                             | version  |
+| --------------------------------------------------- | -------- |
+| [Cantera](https://cantera.org/)                     | \>=3.00  |
+| [Pymoo](https://pymoo.org/)                         | \>=0.6.0 |
+| [pyDecision](https://github.com/Valdecy/pyDecision) | \>=4.5.8 |
 
 After installing the above package, you can follow the following command to install pyMechOpt:
 
