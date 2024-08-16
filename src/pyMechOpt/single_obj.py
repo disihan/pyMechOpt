@@ -19,10 +19,34 @@ class so_problem(basic_problem):
     The available algorithms are GA, PSO, or other Pymoo provided algorithms.
     """
 
-    def __init__(self, gas_orig, gas_rdct, temp_ini=np.array([800]), ratio=np.array([1]), pres=np.array([101325]),
-                 spcs_int=["H2"], spcs_peak=["OH"], range_input=0.2, *args, **kwargs):
-        super().__init__(gas_orig, gas_rdct, temp_ini=temp_ini, ratio=ratio, pres=pres,
-                         spcs_int=spcs_int, spcs_peak=spcs_peak, *args, **kwargs)
+    def __init__(
+        self,
+        gas_orig,
+        gas_rdct,
+        fuel,
+        oxydizer,
+        temp_ini=np.array([800]),
+        ratio=np.array([1]),
+        pres=np.array([101325]),
+        spcs_int=["H2"],
+        spcs_peak=["OH"],
+        range_input=0.2,
+        *args,
+        **kwargs
+    ):
+        super().__init__(
+            gas_orig,
+            gas_rdct,
+            fuel,
+            oxydizer,
+            temp_ini=temp_ini,
+            ratio=ratio,
+            pres=pres,
+            spcs_int=spcs_int,
+            spcs_peak=spcs_peak,
+            *args,
+            **kwargs
+        )
         self.range_input = range_input
         self.l_s = (-1) * np.ones(self.n_var_o) * range_input
         self.r_s = np.ones(self.n_var_o) * range_input
@@ -33,21 +57,26 @@ class so_problem(basic_problem):
         f = np.array([self.val_so(x)])
         self.num += 1
         print(
-            ("iter: %d,    num:%d,    f:" + np.array2string(f, floatmode="fixed", precision=4)) % (self.gen, self.num))
+            (
+                "iter: %d,    num:%d,    f:"
+                + np.array2string(f, floatmode="fixed", precision=4)
+            )
+            % (self.gen, self.num)
+        )
         self.hist_f.append(f[0])
         if len(self.hist_f) == self.pop_size:
             self.time_1 = time.process_time() - self.time_0
             self.gen = self.gen + 1
-            np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_x.dat', self.hist_x)
-            np.savetxt(self.hist_dir + 'gen_' + str(self.gen) + '_f.dat', self.hist_f)
+            np.savetxt(self.hist_dir + "gen_" + str(self.gen) + "_x.dat", self.hist_x)
+            np.savetxt(self.hist_dir + "gen_" + str(self.gen) + "_f.dat", self.hist_f)
             t_f_best_idx = np.argmin(self.hist_f)
             t_f_best = self.hist_f[t_f_best_idx]
             t_x_best = self.hist_x[t_f_best_idx]
             with open(self.hist_dir + "hist_x.dat", "a") as t_f:
-                np.savetxt(t_f, t_x_best, newline=' ')
+                np.savetxt(t_f, t_x_best, newline=" ")
                 t_f.write("\n")
             with open(self.hist_dir + "hist_f.dat", "a") as t_f:
-                np.savetxt(t_f, np.array([t_f_best, self.time_1]), newline=' ')
+                np.savetxt(t_f, np.array([t_f_best, self.time_1]), newline=" ")
                 t_f.write("\n")
             self.hist_f = []
             self.hist_x = []
@@ -80,7 +109,10 @@ class so_problem(basic_problem):
         else:
             try:
                 self.pop_size = max(algorithm.pop_size, algorithm.n_offsprings)
-                print("Pop size: %d, n_offsprings=%d" % (algorithm.pop_size, algorithm.n_offsprings))
+                print(
+                    "Pop size: %d, n_offsprings=%d"
+                    % (algorithm.pop_size, algorithm.n_offsprings)
+                )
             except:
                 try:
                     self.pop_size = algorithm.pop_size
@@ -89,7 +121,7 @@ class so_problem(basic_problem):
                 print("Pop size: %d" % (self.pop_size))
 
         print("START OPTIMIZATION.")
-        res = minimize(self, algorithm, termination=('n_gen', max_gen), seed=seed)
+        res = minimize(self, algorithm, termination=("n_gen", max_gen), seed=seed)
         print("DONE OPTIMIZATION")
         np.savetxt(self.res_dir + "res_X.dat", res.X)
         np.savetxt(self.res_dir + "res_F.dat", res.F)
@@ -103,7 +135,7 @@ class so_problem(basic_problem):
         k = 1
         hist_f_all = []
         while True:
-            t_fname = 'gen_' + str(k) + '_f.dat'
+            t_fname = "gen_" + str(k) + "_f.dat"
             t_fname = hist_dir + t_fname
             if os.path.exists(t_fname) == True:
                 print("Loading history data: " + t_fname)

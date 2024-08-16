@@ -13,16 +13,27 @@ from pyMechOpt.basic import write_yaml, inputgas
 from pyMechOpt.sim import sim_0d_delay
 
 pic_type = ".pdf"
-dir_save = "../figures/"
+dir_save = "../../../figures/"
 mech_dir = "../mech/"
-
-matplotlib.rcParams.update(matplotlib.rcParamsDefault)
 
 config = {
     "text.usetex": True,
+    # "font.family": "sans-serif",
+    "font.family": "arial",
+    # "font.sans-serif": "SimSun",
     # "font.size": 13,
     "mathtext.fontset": "stix",
 }
+# rcParams.update(config)
+# rcParams["backend"] = "Qt5Agg"
+# rcParams["lines.markersize"] = 5
+
+
+# config = {
+#     "text.usetex": True,
+#     # "font.size": 13,
+#     "mathtext.fontset": "stix",
+# }
 a = 4.5
 b = 3.5
 

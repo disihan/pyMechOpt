@@ -18,7 +18,16 @@ def spcs_name_idx(gas, spcs_ipt):
     return spcs_idx
 
 
-def sim_1d(sim_gas, temp_ini=300, pres_ini=ct.one_atm, alpha=1, width=0.03, grid=None):
+def sim_1d(
+    sim_gas,
+    fuel,
+    oxydizer,
+    temp_ini=300,
+    pres_ini=ct.one_atm,
+    alpha=1,
+    width=0.03,
+    grid=None,
+):
     # gas = ct.Solution(file_mech)
     gas = ct.Solution(
         thermo="IdealGas",
@@ -27,7 +36,11 @@ def sim_1d(sim_gas, temp_ini=300, pres_ini=ct.one_atm, alpha=1, width=0.03, grid
         reactions=sim_gas.reactions(),
     )
     gas.TP = temp_ini, pres_ini
-    gas.set_equivalence_ratio(1 / alpha, "CH4:1", "O2:1")
+    gas.set_equivalence_ratio(
+        1 / alpha,
+        fuel,
+        oxydizer,
+    )
     if grid is None:
         f = ct.FreeFlame(gas, width=width)
         f.set_refine_criteria(ratio=8, slope=0.06, curve=0.12)
@@ -190,7 +203,9 @@ def map_time_0d(t_list, temp_list, y_list, d_t, t_max):
     return t_new, temp_new, y_new
 
 
-def calc_delay(t_gas, ratio=np.array([1]), temp_ini=1000, pres_ini=[ct.one_atm]):
+def calc_delay(
+    t_gas, fuel, oxydizer, ratio=np.array([1]), temp_ini=1000, pres_ini=[ct.one_atm]
+):
     gas = ct.Solution(
         thermo="IdealGas",
         kinetics="GasKinetics",
@@ -202,14 +217,20 @@ def calc_delay(t_gas, ratio=np.array([1]), temp_ini=1000, pres_ini=[ct.one_atm])
     delay = []
     for k in range(n_pres):
         for p in range(n_ratio):
-            gas.set_equivalence_ratio(ratio[p], "CH4:1", "O2:1")
+            gas.set_equivalence_ratio(
+                ratio[p],
+                fuel,
+                oxydizer,
+            )
             gas.TP = temp_ini, pres_ini[k]
             t_delay = sim_0d_delay(gas)
             delay.append(t_delay)
     return np.array(delay)
 
 
-def calc_all_orig(t_gas, ratio, temp_ini, pres_ini, spcs_idx_int, spcs_idx_peak):
+def calc_all_orig(
+    t_gas, fuel, oxydizer, ratio, temp_ini, pres_ini, spcs_idx_int, spcs_idx_peak
+):
     gas = ct.Solution(
         thermo="IdealGas",
         kinetics="GasKinetics",
@@ -223,7 +244,11 @@ def calc_all_orig(t_gas, ratio, temp_ini, pres_ini, spcs_idx_int, spcs_idx_peak)
     y_list_int_orig = []
     y_list_peak_orig = []
     for k in range(n_pres):
-        gas.set_equivalence_ratio(ratio[k], "CH4:1", "O2:1")
+        gas.set_equivalence_ratio(
+            ratio[k],
+            fuel,
+            oxydizer,
+        )
         gas.TP = temp_ini[k], pres_ini[k]
         t_list, temp_list, y_list = sim_0d_orig(gas)
         y_int_list = y_list[:, np.array(spcs_idx_int)]
@@ -238,7 +263,15 @@ def calc_all_orig(t_gas, ratio, temp_ini, pres_ini, spcs_idx_int, spcs_idx_peak)
 
 
 def calc_all_rdct(
-    t_gas, ratio, temp_ini, pres_ini, spcs_idx_int, spcs_idx_peak, t_orig
+    t_gas,
+    fuel,
+    oxydizer,
+    ratio,
+    temp_ini,
+    pres_ini,
+    spcs_idx_int,
+    spcs_idx_peak,
+    t_orig,
 ):
     gas = ct.Solution(
         thermo="IdealGas",
@@ -255,7 +288,11 @@ def calc_all_rdct(
     y_list_peak_orig = []
     for k in range(n_pres):
         # for p in range(n_ratio):
-        gas.set_equivalence_ratio(ratio[k], "CH4:1", "O2:1")
+        gas.set_equivalence_ratio(
+            ratio[k],
+            fuel,
+            oxydizer,
+        )
         gas.TP = temp_ini[k], pres_ini[k]
         t_list, temp_list, y_list = sim_0d_rdct(gas, t_orig[k][-1])
         y_int_list = y_list[:, np.array(spcs_idx_int)]
@@ -276,7 +313,6 @@ def calc_y_int(t_list, y_list_int):
     for k in range(len(t_list)):
         t_res = []
         for p in range(y_list_int[k].shape[1]):
-            # print(np.sum(y_list_int[k][:, p] < 0))
             t_res.append(integrate.trapezoid(y_list_int[k][:, p], x=t_list[k]))
         res.append(t_res)
     return res
@@ -453,7 +489,16 @@ def calc_err_all_list(
 
 
 def calc_all_error(
-    t_gas, ratio, temp_ini, pres_ini, spcs_idx, t_orig, temp_orig, y_orig
+    t_gas,
+    fuel,
+    oxydizer,
+    ratio,
+    temp_ini,
+    pres_ini,
+    spcs_idx,
+    t_orig,
+    temp_orig,
+    y_orig,
 ):
     gas = ct.Solution(
         thermo="IdealGas",
@@ -467,7 +512,7 @@ def calc_all_error(
     q = 0
     for k in range(n_pres):
         for p in range(n_ratio):
-            gas.set_equivalence_ratio(ratio[p], "CH4:1", "O2:1")
+            gas.set_equivalence_ratio(ratio[p], fuel, oxydizer)
             gas.TP = temp_ini, pres_ini[k]
             t_list, temp_list, y_list = sim_0d(gas, t_orig[q])
             y_list = y_list[:, spcs_idx]

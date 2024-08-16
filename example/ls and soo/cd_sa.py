@@ -15,10 +15,14 @@ spcs_peak = ["CH2O", "CO", "CO2"]
 
 gas_orig = ct.Solution("../mech/gri30.yaml")
 gas_rdcd = ct.Solution("../mech/gri30-r45.yaml")
+fuel = "CH4:1"
+oxydizer = "O2:1"
 
 opt_prob = ls_problem(
     gas_orig,
     gas_rdcd,
+    fuel,
+    oxydizer,
     temperature,
     ratio,
     pressure,

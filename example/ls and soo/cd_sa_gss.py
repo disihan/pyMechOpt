@@ -12,13 +12,16 @@ ratio = np.array([0.25, 1, 4, 0.25, 1, 4])
 
 spcs_int = ["CH4", "O2"]
 spcs_peak = ["CH2O", "CO", "CO2"]
-6
 gas_orig = ct.Solution("../mech/gri30.yaml")
 gas_rdcd = ct.Solution("../mech/gri30-r45.yaml")
+fuel = "CH4:1"
+oxydizer = "O2:1"
 
 opt_prob = ls_problem(
     gas_orig,
     gas_rdcd,
+    fuel,
+    oxydizer,
     temperature,
     ratio,
     pressure,

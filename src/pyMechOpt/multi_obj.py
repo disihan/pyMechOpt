@@ -30,6 +30,8 @@ class mo_problem(basic_problem):
         self,
         gas_orig,
         gas_rdct,
+        fuel,
+        oxydizer,
         temp_ini=np.array([800]),
         ratio=np.array([1]),
         pres=np.array([101325]),
@@ -42,6 +44,8 @@ class mo_problem(basic_problem):
         super().__init__(
             gas_orig,
             gas_rdct,
+            fuel,
+            oxydizer,
             temp_ini=temp_ini,
             ratio=ratio,
             pres=pres,

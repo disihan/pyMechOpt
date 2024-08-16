@@ -58,7 +58,7 @@ def vald_mo(name, name_cap, save_legend=False):
             frameon=False,
         )
         new_ax.axis("off")
-        new_fig.tight_layout()  # 调整布局以适应图例
+        new_fig.tight_layout()
         new_fig.savefig(dir_save + "hist-legend.pdf")
 
         plt.close(new_fig)
@@ -85,8 +85,6 @@ def vald_mo(name, name_cap, save_legend=False):
     for fig in [fig_1, fig_21, fig_22, fig_3]:
         fig.show()
 
-    # return fig_1, fig_21, fig_22, fig_3
-
 
 def vald_delay(name, name_cap):
     mech_vald = mech_dir + "mech.opt." + name + ".yaml"
@@ -94,8 +92,6 @@ def vald_delay(name, name_cap):
     temp_ini = 1000
     pres = 1e05 * np.array([1, 5, 24, 100])
     ratio_eq = np.logspace(np.log(0.25), np.log(1 / 0.25), 9, base=np.e)
-    # alpha = np.linspace(0.25, 4, 16)
-    # ratio_eq = 1 / alpha
     vald = vald_mech(mech_dir + "gri30.yaml", mech_dir + "gri30-r45.yaml")
     error_rdct, delay_orig, delay_rdct = vald.err_delay_ratio_pres(
         temp_ini=temp_ini, ratio=ratio_eq, pres=pres
@@ -268,7 +264,6 @@ def vald_1D(name_list, name_cap_list):
     pres = 1e05
     temp_ini = 600
     ratio = 2
-    # spcs = ["CH4", "O2", "CO", "CO2"]
     spcs = ["CH4", "O2", "CH2O"]
 
     t_pic_name = ""

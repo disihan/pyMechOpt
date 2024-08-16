@@ -21,6 +21,8 @@ class ls_problem(basic_problem):
         self,
         gas_orig,
         gas_rdct,
+        fuel,
+        oxydizer,
         temp_ini,
         ratio,
         pres,
@@ -32,10 +34,20 @@ class ls_problem(basic_problem):
         **kwargs,
     ):
         self.max_step = max_step
+        self.range_input = max_step * 4
         self.eps = eps
         self.step_ratio = step_ratio
         super().__init__(
-            gas_orig, gas_rdct, temp_ini, ratio, pres, spcs_int, spcs_peak, **kwargs
+            gas_orig,
+            gas_rdct,
+            fuel,
+            oxydizer,
+            temp_ini,
+            ratio,
+            pres,
+            spcs_int,
+            spcs_peak,
+            **kwargs,
         )
 
     def run(self, algorithm="GD", max_gen=400, max_step=0.05, **kwargs):

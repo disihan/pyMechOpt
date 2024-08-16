@@ -14,10 +14,14 @@ spcs_peak = ["CH2O", "CO", "CO2"]
 
 mech_detailed = "../mech/gri30.yaml"  # detailed mech
 mech_reduced = "../mech/gri30-r45.yaml"  # reduced mech
+fuel = "CH4:1"
+oxydizer = "O2:1"
 
 opt_prob = so_problem(
     mech_detailed,
     mech_reduced,
+    fuel,
+    oxydizer,
     temperature,
     ratio,
     pressure,

@@ -23,6 +23,8 @@ class basic_problem(ElementwiseProblem):
         self,
         gas_orig,
         gas_rdct,
+        fuel,
+        oxydizer,
         temp_ini=np.array([800]),
         ratio=np.array([1]),
         pres=np.array([101325]),
@@ -42,6 +44,8 @@ class basic_problem(ElementwiseProblem):
                 "Error occurred: The dimensions of the initial condition vectors for pressure, temperature, and mixing ratio must be equal.\n"
             )
             exit()
+        self.fuel = fuel
+        self.oxydizer = oxydizer
         self.ratio = ratio
         self.pres = pres
         self.temp_ini = temp_ini
@@ -68,7 +72,14 @@ class basic_problem(ElementwiseProblem):
             self.y_list_int_orig,
             self.y_list_peak_orig,
         ) = calc_all_orig(
-            gas_orig, ratio, temp_ini, pres, self.idx_int_orig, self.idx_peak_orig
+            gas_orig,
+            fuel,
+            oxydizer,
+            ratio,
+            temp_ini,
+            pres,
+            self.idx_int_orig,
+            self.idx_peak_orig,
         )
         self.y_int_orig = calc_y_int(self.t_list_orig, self.y_list_int_orig)
         self.temp_int_orig = calc_temp_int(self.t_list_orig, self.temp_list_orig)
@@ -97,6 +108,8 @@ class basic_problem(ElementwiseProblem):
         gas_modd = self.input2gas(input)
         t_list_modd, temp_list_modd, y_list_int_modd, y_list_peak_modd = calc_all_rdct(
             gas_modd,
+            self.fuel,
+            self.oxydizer,
             self.ratio,
             self.temp_ini,
             self.pres,

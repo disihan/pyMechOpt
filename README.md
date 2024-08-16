@@ -1,4 +1,4 @@
-# pyMechOpt: A Python toolbox for Mechanism Optimization
+# pyMechOpt: A Python toolbox for optimizing of reaction mechanisms
 
 pyMechOpt can optimize the chemical reaction mechanism and reduce the difference with the detailed reaction mechanism.
 
@@ -45,11 +45,16 @@ Given the species to be optimized and the initial conditions:
     temperature = np.array([1000, 1000, 1000, 1000, 1000, 1000])
     ratio = np.array([0.25, 1, 4, 0.25, 1, 4])
 
+    fuel = "CH4:1"
+    oxydizer = "O2:1"
+
 Then you can start optimizing.
 
     opt_prob = mo_problem(
         mech_detailed,
         mech_reduced,
+        fuel,
+        oxydizer,
         temperature,
         ratio,
         pressure,
