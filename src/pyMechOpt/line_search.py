@@ -218,10 +218,10 @@ class ls_problem(basic_problem):
         else:
             l = -max_step
         r = max_step
-        x_step = list(np.linspace(l, r, n_init))
+        x_step_list = list(np.linspace(l, r, n_init))
         x_step_r = list(np.linspace(l, r, n_p))
-        for k in range(len(x_step)):
-            x_list.append(x + x_step[k] * direction)
+        for k in range(len(x_step_list)):
+            x_list.append(x + x_step_list[k] * direction)
         ls_iter = 0
         f_list = []
         if np.abs(r - l) < self.eps:
@@ -230,25 +230,30 @@ class ls_problem(basic_problem):
             f_list.append(self.val_so(x_list[k]))
         while ls_iter < max_ls_step:
             ls_iter += 1
-            t_func = interp1d(x_step, f_list, kind="cubic")
+            t_func = interp1d(x_step_list, f_list, kind="cubic")
             f_r = t_func(x_step_r)
             t_f_min_idx = np.argmin(f_r)
             t_f_min = f_r[t_f_min_idx]
             t_f_max = np.max(f_r)
             t_x_step_min = x_step_r[t_f_min_idx]
             t_x_min = x + t_x_step_min * direction
-            if (t_x_step_min in x_step) or (
+            if (t_x_step_min in x_step_list) or (
                 (t_f_max - t_f_min) / (np.abs(t_f_max)) < self.eps
             ):
                 return t_x_min, t_f_min, t_x_step_min
-            x_step.append(t_x_step_min)
+            x_step_list.append(t_x_step_min)
+            x_list.append(t_x_min)
             f_list.append(self.val_so(t_x_min))
             print(
                 "\titer: %d    x:%.6e    f:%.6e    idx:%d"
                 % (ls_iter, t_x_step_min, f_list[-1], t_f_min_idx)
             )
-            if np.abs(x_step[-1] - x_step[-2]) < self.eps:
-                return t_x_min, f_list[-1], x_step[-1]
+            if np.abs(x_step_list[-1] - x_step_list[-2]) < self.eps:
+                return t_x_min, f_list[-1], x_step_list[-1]
+        t_f_min_idx = np.argmin(f_list)
+        t_x_step_min = x_step_list[t_f_min_idx]
+        t_x_min = x_list[t_f_min_idx]
+        t_f_min = f_list[t_f_min_idx]
         return t_x_min, t_f_min, t_x_step_min
 
     def linesearch(self, x, direction, max_step, symm=False, **kwargs):
