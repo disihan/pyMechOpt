@@ -67,3 +67,22 @@ Then you can start optimizing.
     )
     opt_prob.calc_skip()
     opt_prob.run(algorithm="NSGA3", max_gen=400, pop_size=200)
+
+## Cite us
+
+[pyMechOpt: A Python toolbox for optimizing of reaction mechanisms](https://doi.org/10.1016/j.softx.2024.102001)
+
+Bibtex:
+
+> @article{pyMechOpt,  
+> &nbsp; &nbsp; &nbsp; &nbsp; title = {pyMechOpt: A Python toolbox for optimizing of reaction mechanisms},  
+> &nbsp; &nbsp; &nbsp; &nbsp; journal = {SoftwareX},  
+> &nbsp; &nbsp; &nbsp; &nbsp; volume = {29},  
+> &nbsp; &nbsp; &nbsp; &nbsp; pages = {102001},  
+> &nbsp; &nbsp; &nbsp; &nbsp; year = {2025},  
+> &nbsp; &nbsp; &nbsp; &nbsp; issn = {2352-7110},  
+> &nbsp; &nbsp; &nbsp; &nbsp; doi = {https://doi.org/10.1016/j.softx.2024.102001},  
+> &nbsp; &nbsp; &nbsp; &nbsp; url = {https://www.sciencedirect.com/science/article/pii/S2352711024003716},  
+> &nbsp; &nbsp; &nbsp; &nbsp; author = {Sihan Di and Nanjia Yu and Shutao Han and Haodong He},  
+> &nbsp; &nbsp; &nbsp; &nbsp; keywords = {Reaction mechanisms, Optimization, Python toolbox},  
+> }
